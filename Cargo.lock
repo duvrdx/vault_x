@@ -1730,21 +1730,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "password_vault"
-version = "0.1.0"
-dependencies = [
- "actix",
- "actix-web",
- "bcrypt",
- "dotenv",
- "magic-crypt",
- "rand",
- "serde",
- "serde_json",
- "sqlx",
-]
-
-[[package]]
 name = "paste"
 version = "1.0.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2481,6 +2466,21 @@ name = "value-bag"
 version = "1.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "126e423afe2dd9ac52142e7e9d5ce4135d7e13776c529d27fd6bc49f19e3280b"
+
+[[package]]
+name = "vault_x"
+version = "0.1.0"
+dependencies = [
+ "actix",
+ "actix-web",
+ "bcrypt",
+ "dotenv",
+ "magic-crypt",
+ "rand",
+ "serde",
+ "serde_json",
+ "sqlx",
+]
 
 [[package]]
 name = "vcpkg"

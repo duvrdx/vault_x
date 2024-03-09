@@ -19,3 +19,8 @@ pub struct UserResponse{
     pub id: i32,
     pub username: String
 }
+
+#[derive(Serialize, Deserialize, FromRow, Debug)]
+pub struct MasterKeyBody{
+    pub master_key: String
+}

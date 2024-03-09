@@ -4,7 +4,11 @@ use actix_web::{
   Responder, HttpResponse
 };
 use sqlx::{self};
-use crate::models::user::{User, CreateUserBody, UserResponse};
+use crate::models::user::{User, CreateUserBody, UserResponse, MasterKeyBody};
+use crate::models::vault::{Vault};
+use crate::models::account::{Account};
+use crate::utils::cryptography::{decrypt_string};
+
 use crate::AppState;
 use bcrypt::{hash, DEFAULT_COST};
 
@@ -104,4 +108,71 @@ pub async fn update_user(state: Data<AppState>, path: Path<i32>, body: Json<Crea
         return HttpResponse::InternalServerError().json("Failed to update user")
       },
   }
+}
+
+#[get("/user/{user_id}/vaults")]
+pub async fn get_user_vaults(state: Data<AppState>, path: Path<i32>) -> impl Responder {
+  let user_id = path.into_inner();
+  
+  match sqlx::query_as::<_, UserResponse>("SELECT id, title FROM vaults WHERE user_id = $1")
+      .bind(user_id)
+      .fetch_all(&state.db)
+      .await
+  {
+      Ok(vaults) => {
+        return HttpResponse::Ok().json(vaults)
+      },
+      Err(_) => {
+        println!("");
+        return HttpResponse::InternalServerError().json("Failed to get vaults")
+      },
+  }
+}
+
+#[get("/user/{user_id}/vault/{vault_id}")]
+pub async fn get_user_accounts(state: Data<AppState>, path: Path<(i32, i32)>, body: Json<MasterKeyBody>) -> impl Responder {
+  let (user_id, vault_id) = path.into_inner();
+
+  let vault;
+
+  match sqlx::query_as::<_, Vault>("SELECT * FROM vaults WHERE id = $1 AND user_id = $2")
+      .bind(vault_id)
+      .bind(user_id)
+      .fetch_one(&state.db)
+      .await
+  {
+      Ok(vault_response) => {
+        vault = vault_response;
+      },
+      Err(_) => {
+        return HttpResponse::NotFound().json("Vault not found")
+      },
+  }
+
+  
+  match sqlx::query_as::<_, Account>("SELECT * FROM accounts WHERE vault_id = $1")
+  .bind(vault_id)
+  .fetch_all(&state.db)
+  .await
+  {
+    Ok(mut accounts) => {
+      if body.master_key != ""{
+          if !bcrypt::verify(&body.master_key, &vault.master_key).unwrap(){
+            return HttpResponse::Unauthorized().json("Invalid master key")
+          }
+
+          for account in accounts.iter_mut(){
+            account.encrypted_login = decrypt_string(&account.encrypted_login.to_string(), &vault.master_key.to_string());
+            account.encrypted_password = decrypt_string(&account.encrypted_password.to_string(), &vault.master_key.to_string());
+          }
+        }
+        return HttpResponse::Ok().json(accounts)
+      },
+      Err(_) => {
+        println!("");
+        return HttpResponse::NotFound().json("Accounts not found")
+      },
+  }
+
+
 }

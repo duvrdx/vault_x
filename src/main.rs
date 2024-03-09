@@ -2,14 +2,12 @@
 use actix_web::{web::Data, App, HttpServer};
 use dotenv::dotenv;
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
-use bcrypt::{verify, DEFAULT_COST};
 
 mod services;
 mod models; 
 mod utils;
 
-use services::{vault, user};
-use utils::cryptography::{encrypt_string, decrypt_string};
+use services::{vault, user, account};
 
 struct AppState{
     db: Pool<Postgres>
@@ -40,11 +38,18 @@ async fn main() -> std::io::Result<()>{
             .service(user::create_user)
             .service(user::delete_user)
             .service(user::update_user)
+            .service(user::get_user_accounts)
             .service(vault::get_vault)
             .service(vault::get_all_vaults)
             .service(vault::create_vault)
             .service(vault::delete_vault)
             .service(vault::update_vault)
+            .service(vault::get_accounts_by_vault_id)
+            .service(account::create_account)
+            .service(account::get_account)
+            .service(account::get_all_accounts)
+            .service(account::delete_account)
+            .service(account::update_account)
     })
     .bind((server_url, 7777))?
     .run()

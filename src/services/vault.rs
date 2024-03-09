@@ -4,31 +4,29 @@ use actix_web::{
   Responder, HttpResponse
 };
 use sqlx::{self};
-use crate::models::vault::{Vault, CreateVaultBody, VaultResponse};
+use crate::models::vault::{CreateVaultBody, VaultResponse};
 use crate::AppState;
 use bcrypt::{hash, DEFAULT_COST};
 
-//TODO: Implementar get vaults by user_id
-//TODO: Implementar get accounts ids by vault id
 
-// #[get("/vault/{id}/accounts")]
-// pub async fn get_accounts_by_vault_id(state: Data<AppState>, path: Path<i32>) -> impl Responder {
-//   let id = path.into_inner();
+#[get("/vault/{id}/accounts")]
+pub async fn get_accounts_by_vault_id(state: Data<AppState>, path: Path<i32>) -> impl Responder {
+  let id = path.into_inner();
   
-//   match sqlx::query_as::<_, VaultResponse>("SELECT * FROM vaults WHERE id = $1")
-//       .bind(id)
-//       .fetch_one(&state.db)
-//       .await
-//   {
-//       Ok(vault) => {
-//         return HttpResponse::Ok().json(vault)
-//       },
-//       Err(_) => {
-//         println!("");
-//         return HttpResponse::NotFound().json("Vault not found")
-//       },
-//   }
-// }
+  match sqlx::query_as::<_, VaultResponse>("SELECT * FROM accounts WHERE vault_id = $1")
+      .bind(id)
+      .fetch_one(&state.db)
+      .await
+  {
+      Ok(accounts) => {
+        return HttpResponse::Ok().json(accounts)
+      },
+      Err(_) => {
+        println!("");
+        return HttpResponse::NotFound().json("Vault not found")
+      },
+  }
+}
 
 #[get("/vault/{id}")]
 pub async fn get_vault(state: Data<AppState>, path: Path<i32>) -> impl Responder {
